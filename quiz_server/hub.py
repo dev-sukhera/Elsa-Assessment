@@ -53,10 +53,12 @@ class Hub:
         self._task = asyncio.create_task(self._flush_loop(), name="leaderboard-flusher")
 
     async def stop(self) -> None:
-        for conns in self._local.values():
-            for c in conns:
-                with contextlib.suppress(Exception):
-                    await c.ws.close(code=CLOSE_SERVICE_RESTART, reason="server restarting")
+        # Snapshot first: closing a socket lets its handler run unregister(),
+        # which mutates self._local while we would still be iterating it.
+        everyone = [c for conns in self._local.values() for c in conns]
+        for c in everyone:
+            with contextlib.suppress(Exception):
+                await c.ws.close(code=CLOSE_SERVICE_RESTART, reason="server restarting")
         if self._task:
             self._task.cancel()
             with contextlib.suppress(asyncio.CancelledError):

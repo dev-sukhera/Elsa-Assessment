@@ -105,3 +105,31 @@ async def test_unregister_last_connection_unsubscribes():
     assert "Q" in bus._subs and hub.local_count("Q") == 1
     await hub.unregister(conn)
     assert "Q" not in bus._subs and hub.local_count("Q") == 0
+
+
+class UnregisteringSocket(RecordingSocket):
+    """Closing the socket makes its endpoint unregister, as in the real app."""
+
+    def __init__(self, hub: Hub) -> None:
+        super().__init__()
+        self.hub: Hub = hub
+        self.conn: Connection | None = None
+
+    async def close(self, code: int = 1000, reason: str | None = None) -> None:
+        await super().close(code, reason)
+        await self.hub.unregister(self.conn)
+
+
+async def test_stop_closes_every_connection_while_they_unregister():
+    store, bus, metrics = InMemoryStore(), LocalBus(), Metrics()
+    hub = Hub(store, bus, metrics, interval_s=0.01, top_n=5)
+    await hub.start()
+    sockets = []
+    for i in range(3):
+        ws = UnregisteringSocket(hub)
+        ws.conn = make_conn(ws, f"u{i}", metrics)
+        await hub.register(ws.conn)
+        sockets.append(ws)
+    await hub.stop()
+    assert [ws.closed_with for ws in sockets] == [1012, 1012, 1012]
+    assert hub.local_count("Q") == 0
