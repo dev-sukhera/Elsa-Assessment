@@ -11,8 +11,8 @@
 
   AI-ASSISTED (Claude Code): generated in full by the AI, then redesigned on
   request. The first version was tried in a real browser by the candidate,
-  which found the shared-identity bug fixed above. JavaScript syntax is checked
-  with JavaScriptCore; the redesign itself still needs a browser check.
+  which found the shared-identity bug fixed above. The current page is
+  exercised in Chromium by Playwright when the README screenshots are taken.
 -->
 <html lang="en">
 <head>
@@ -21,46 +21,49 @@
 <title>Live Vocab Quiz</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+  /* Dictionary-page palette: warm paper, ink green, marigold highlight. */
   :root {
-    --bg: #f3f4fa; --surface: #ffffff; --surface-2: #f6f7fc; --ink: #141a2e; --muted: #667085; --line: #e5e8f1;
-    --accent: #5b5bf6; --accent-2: #20b8e6; --accent-ink: #ffffff;
-    --good: #12a15e; --good-bg: rgba(18,161,94,.10); --bad: #e5383b; --bad-bg: rgba(229,56,59,.10); --warn: #f08c00;
-    --gold: #f2b100; --silver: #9aa4b2; --bronze: #c9773b; --me: rgba(91,91,246,.09);
-    --shadow: 0 1px 2px rgba(20,26,46,.05), 0 8px 24px rgba(20,26,46,.07);
-    --radius: 18px;
+    --bg: #f5f0e6; --surface: #fffdf8; --surface-2: #f8f4eb; --ink: #1f2421; --muted: #5b6058; --line: #e2dacb;
+    --accent: #1f6f54; --accent-strong: #185a44; --accent-ink: #ffffff; --mark: #d9962b; --mark-bg: rgba(217,150,43,.16);
+    --good: #237a4b; --good-bg: rgba(35,122,75,.10); --bad: #b4382e; --bad-bg: rgba(180,56,46,.09); --warn: #a8660f;
+    --gold: #b88411; --silver: #7b8088; --bronze: #a2592c; --me: rgba(31,111,84,.09);
+    --shadow: 0 1px 2px rgba(31,36,33,.06), 0 6px 18px rgba(31,36,33,.06);
+    --radius: 14px;
+    --serif: "Fraunces", Georgia, "Times New Roman", serif;
+    --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #0a0d19; --surface: #131a2d; --surface-2: #19213a; --ink: #eef1fb; --muted: #97a1b7; --line: #252e49;
-      --accent: #7b7bff; --accent-2: #3cc8f0; --accent-ink: #0a0d19;
-      --good: #34d17f; --good-bg: rgba(52,209,127,.12); --bad: #ff5d61; --bad-bg: rgba(255,93,97,.12); --warn: #ffa94d;
-      --me: rgba(123,123,255,.14);
-      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.35);
+      --bg: #151612; --surface: #1e201b; --surface-2: #252821; --ink: #f0ebdf; --muted: #aaa595; --line: #36392f;
+      --accent: #6cc29c; --accent-strong: #8bd3b2; --accent-ink: #10221a; --mark: #f0b552; --mark-bg: rgba(240,181,82,.16);
+      --good: #6ccf94; --good-bg: rgba(108,207,148,.12); --bad: #f08a7e; --bad-bg: rgba(240,138,126,.12); --warn: #f0b552;
+      --gold: #f0c35a; --silver: #b9bec6; --bronze: #df9468; --me: rgba(108,194,156,.12);
+      --shadow: 0 1px 2px rgba(0,0,0,.35), 0 10px 28px rgba(0,0,0,.3);
     }
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; }
   body {
     min-height: 100vh; color: var(--ink);
-    font: 16px/1.5 "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-    background:
-      radial-gradient(900px 500px at 10% -10%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%),
-      radial-gradient(800px 500px at 100% 0%, color-mix(in srgb, var(--accent-2) 12%, transparent), transparent 70%),
-      var(--bg);
-    background-attachment: fixed;
+    font: 16px/1.5 var(--sans);
+    background: var(--bg);
   }
+  h1, h2, h3, .prompt, .brand-name { font-family: var(--serif); font-optical-sizing: auto; }
+  :focus-visible { outline: 3px solid var(--mark); outline-offset: 2px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
   button, input { font: inherit; color: inherit; }
   [hidden] { display: none !important; }
   .wrap { max-width: 1080px; margin: 0 auto; padding: 20px 16px 48px; }
 
   /* ---------- top bar ---------- */
   .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 22px; }
-  .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 18px; letter-spacing: -.01em; }
-  .logo { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 15px;
-          background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 6px 16px color-mix(in srgb, var(--accent) 35%, transparent); }
-  .brand small { display: block; font-weight: 500; font-size: 12px; color: var(--muted); letter-spacing: 0; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-name { display: block; font-weight: 700; font-size: 20px; letter-spacing: -.01em; line-height: 1.2; }
+  .logo { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; color: var(--accent-ink); font: 700 18px/1 var(--serif);
+          background: var(--accent); }
+  .brand small { display: block; font-weight: 500; font-size: 13px; color: var(--muted); }
   .pill { display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 999px; font-size: 13px; font-weight: 600;
           background: var(--surface); border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
   .pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
@@ -71,36 +74,39 @@
 
   /* ---------- cards ---------- */
   .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; }
+  @media (max-width: 560px) { .card { padding: 18px; } .brand small { display: none; } }
   .label { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 
   /* ---------- join ---------- */
   .join { max-width: 460px; margin: 6vh auto 0; padding: 32px; }
-  .join h1 { font-size: 28px; line-height: 1.2; margin: 0 0 6px; letter-spacing: -.02em; }
+  .join h1 { font-size: 30px; font-weight: 600; line-height: 1.15; margin: 0 0 8px; letter-spacing: -.01em; }
   .join p.sub { margin: 0 0 24px; color: var(--muted); }
   .field { display: grid; gap: 6px; margin-bottom: 14px; }
   .field-row { display: flex; gap: 8px; }
-  input { width: 100%; padding: 13px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); outline: none; transition: border-color .15s, box-shadow .15s; }
-  input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent); }
+  input { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); transition: border-color .15s, box-shadow .15s; }
+  input:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
   #quiz { text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
-  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 18px; border-radius: 12px; border: 1px solid transparent;
-         cursor: pointer; font-weight: 700; transition: transform .08s, filter .15s, background .15s; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 18px; border-radius: 10px; border: 1px solid transparent;
+         cursor: pointer; font-weight: 600; transition: transform .08s, background .15s, border-color .15s; }
+  .btn:disabled { cursor: progress; opacity: .7; }
   .btn:active { transform: translateY(1px); }
-  .btn-primary { width: 100%; margin-top: 6px; color: #fff; background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 70%, var(--accent-2)));
-                 box-shadow: 0 8px 20px color-mix(in srgb, var(--accent) 30%, transparent); }
-  .btn-primary:hover { filter: brightness(1.06); }
+  .btn-primary { width: 100%; margin-top: 6px; color: var(--accent-ink); background: var(--accent); }
+  .btn-primary:hover:not(:disabled) { background: var(--accent-strong); }
   .btn-ghost { background: var(--surface-2); border-color: var(--line); color: var(--ink); white-space: nowrap; }
   .btn-ghost:hover { border-color: var(--accent); }
   .btn-sm { padding: 8px 12px; font-size: 13px; border-radius: 10px; }
   .hint { margin: 18px 0 0; font-size: 13px; color: var(--muted); text-align: center; }
   .hint b { color: var(--ink); }
+  .form-error { margin: 12px 0 0; padding: 10px 12px; border-radius: 10px; background: var(--bad-bg); color: var(--bad); font-size: 14px; font-weight: 600; }
 
   /* ---------- game layout ---------- */
   .session { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
-  .session h2 { margin: 0; font-size: 22px; letter-spacing: -.02em; }
+  .session h2 { margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -.01em; }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   .chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 10px; font-size: 13px; font-weight: 600;
           background: var(--surface); border: 1px solid var(--line); }
-  .chip.code { cursor: pointer; letter-spacing: .08em; }
+  button.chip { font: inherit; font-size: 13px; font-weight: 600; color: var(--ink); }
+  .chip.code { cursor: pointer; letter-spacing: .08em; font-family: ui-monospace, "SF Mono", Menlo, monospace; }
   .chip.code:hover { border-color: var(--accent); }
   .game { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; align-items: start; }
   @media (max-width: 820px) { .game { grid-template-columns: 1fr; } }
@@ -113,68 +119,71 @@
   .step.right { background: var(--good); } .step.wrong { background: var(--bad); } .step.done { background: var(--muted); }
   @keyframes pulse { 50% { opacity: .45; } }
   .scorebox { text-align: right; position: relative; }
-  .score { font-size: 34px; font-weight: 800; line-height: 1.1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .score { font: 700 36px/1.1 var(--serif); line-height: 1.1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
   .gain { position: absolute; right: 0; top: -6px; font-weight: 800; color: var(--good); opacity: 0; pointer-events: none; }
   .gain.show { animation: rise 1.2s ease-out; }
   @keyframes rise { 0% { opacity: 0; transform: translateY(8px); } 15% { opacity: 1; } 100% { opacity: 0; transform: translateY(-26px); } }
 
   .timer { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
   .track { flex: 1; height: 8px; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--line); overflow: hidden; }
-  .fill { height: 100%; width: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .1s linear, background .3s; }
+  .fill { height: 100%; width: 100%; border-radius: 4px; background: var(--accent); transition: width .1s linear, background .3s; }
   .timer.warn .fill { background: var(--warn); } .timer.danger .fill { background: var(--bad); }
   .secs { min-width: 38px; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--muted); }
   .timer.danger .secs { color: var(--bad); }
 
-  .prompt { font-size: 24px; line-height: 1.35; font-weight: 700; letter-spacing: -.01em; margin: 0 0 20px; }
+  .prompt { font-size: 26px; line-height: 1.3; font-weight: 600; letter-spacing: -.005em; margin: 0 0 20px; }
+  .prompt.loading { color: var(--muted); font-style: italic; }
+  @media (max-width: 560px) { .prompt { font-size: 22px; } }
   .options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   @media (max-width: 560px) { .options { grid-template-columns: 1fr; } }
-  .opt { display: flex; align-items: center; gap: 12px; text-align: left; width: 100%; padding: 14px; border-radius: 14px; cursor: pointer;
+  .opt { display: flex; align-items: center; gap: 12px; text-align: left; width: 100%; min-height: 56px; padding: 14px; border-radius: 12px; cursor: pointer;
          background: var(--surface-2); border: 1.5px solid var(--line); font-weight: 600; transition: border-color .15s, background .15s, transform .08s; }
   .opt:hover:not(:disabled) { border-color: var(--accent); transform: translateY(-1px); }
   .opt:disabled { cursor: default; }
-  .key { flex: none; width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; font-size: 13px; font-weight: 800;
+  .key { flex: none; width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; font-size: 13px; font-weight: 700;
          background: var(--surface); border: 1px solid var(--line); color: var(--muted); }
-  .opt.picked { border-color: var(--accent); }
+  .opt.picked { border-color: var(--mark); background: var(--mark-bg); }
   .opt.right { border-color: var(--good); background: var(--good-bg); }
   .opt.right .key { background: var(--good); border-color: var(--good); color: #fff; }
   .opt.wrong { border-color: var(--bad); background: var(--bad-bg); }
   .opt.wrong .key { background: var(--bad); border-color: var(--bad); color: #fff; }
-  .opt.dim { opacity: .55; }
+  .opt.dim { opacity: .6; }
   .feedback { min-height: 26px; margin: 16px 0 0; font-weight: 600; color: var(--muted); }
   .feedback.good { color: var(--good); } .feedback.bad { color: var(--bad); }
   .kbd-hint { margin-top: 6px; font-size: 12px; color: var(--muted); }
+  @media (hover: none), (max-width: 560px) { .kbd-hint { display: none; } }
 
   .enter-q { animation: slidein .35s cubic-bezier(.2,.8,.2,1); }
   @keyframes slidein { from { opacity: 0; transform: translateX(14px); } }
 
   /* ---------- finished ---------- */
   .done { text-align: center; padding: 18px 0 6px; }
-  .trophy { width: 84px; height: 84px; margin: 0 auto 14px; border-radius: 24px; display: grid; place-items: center;
-            background: linear-gradient(135deg, var(--gold), #ff8a00); box-shadow: 0 12px 28px rgba(242,177,0,.35); }
-  .done h3 { margin: 0 0 4px; font-size: 26px; letter-spacing: -.02em; }
+  .trophy { width: 80px; height: 80px; margin: 0 auto 14px; border-radius: 50%; display: grid; place-items: center; background: var(--mark); }
+  .done h3 { margin: 0 0 4px; font-size: 28px; font-weight: 600; }
   .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
   .stat { background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px; padding: 14px 8px; }
-  .stat b { display: block; font-size: 22px; font-variant-numeric: tabular-nums; }
+  .stat b { display: block; font: 700 24px/1.2 var(--serif); font-variant-numeric: tabular-nums; }
   .stat span { font-size: 12px; color: var(--muted); font-weight: 600; }
 
   /* ---------- leaderboard ---------- */
   .board-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
-  .board-head h3 { margin: 0; font-size: 17px; }
-  .live { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--bad); text-transform: uppercase; letter-spacing: .06em; }
-  .live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--bad); animation: blink 1.4s infinite; }
+  .board-head h3 { margin: 0; font-size: 20px; font-weight: 600; }
+  .live { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: .06em; }
+  .live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: blink 1.4s infinite; }
   ol.rows { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
   .row { display: grid; grid-template-columns: 28px 36px 1fr auto; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 12px;
          border: 1px solid transparent; background: var(--surface-2); }
   .row.me { background: var(--me); border-color: color-mix(in srgb, var(--accent) 35%, transparent); }
-  .rank { font-weight: 800; font-size: 14px; text-align: center; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .rank { font-weight: 700; font-size: 14px; text-align: center; color: var(--muted); font-variant-numeric: tabular-nums; }
   .row[data-rank="1"] .rank { color: var(--gold); } .row[data-rank="2"] .rank { color: var(--silver); } .row[data-rank="3"] .rank { color: var(--bronze); }
-  .avatar { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #fff; }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 13px; color: #fff; }
   .who { min-width: 0; }
   .name { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .you { font-size: 10px; font-weight: 800; letter-spacing: .06em; color: var(--accent); margin-left: 6px; }
+  .you { font-size: 10px; font-weight: 700; letter-spacing: .06em; color: var(--accent); margin-left: 6px; }
   .bar { height: 4px; margin-top: 5px; border-radius: 2px; background: var(--line); overflow: hidden; }
-  .bar i { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .5s cubic-bezier(.2,.8,.2,1); }
-  .pts { font-weight: 800; font-variant-numeric: tabular-nums; }
+  .bar i { display: block; height: 100%; border-radius: 2px; background: var(--accent); transition: width .5s cubic-bezier(.2,.8,.2,1); }
+  .row.me .bar i { background: var(--mark); }
+  .pts { font-weight: 700; font-variant-numeric: tabular-nums; }
   .row.bump { animation: bump .7s ease-out; }
   @keyframes bump { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--good) 45%, transparent); } 100% { box-shadow: 0 0 0 10px transparent; } }
   .row.enter { animation: fadein .4s ease-out; }
@@ -198,13 +207,14 @@
 <body>
 <div class="wrap">
   <header class="topbar">
-    <div class="brand"><div class="logo">Aa</div><div>Live Vocab Quiz<small>Answer fast, climb the board</small></div></div>
-    <span id="status" class="pill off"><span class="dot"></span><span id="status-text">Not connected</span></span>
+    <div class="brand"><div class="logo" aria-hidden="true">Aa</div><div><span class="brand-name">Live Vocab Quiz</span><small>Answer fast, climb the board</small></div></div>
+    <span id="status" class="pill off" role="status"><span class="dot" aria-hidden="true"></span><span id="status-text">Not connected</span></span>
   </header>
 
   <!-- Join -->
-  <section id="join-view" class="card join">
-    <h1>Join a live quiz</h1>
+  <main>
+  <section id="join-view" class="card join" aria-labelledby="join-title">
+    <h1 id="join-title">Join a live quiz</h1>
     <p class="sub">Enter a quiz ID to compete with everyone in the same session in real time.</p>
     <form id="join">
       <div class="field">
@@ -218,24 +228,25 @@
         <label class="label" for="name">Your name</label>
         <input id="name" placeholder="e.g. Sam" autocomplete="nickname" required maxlength="32">
       </div>
-      <button class="btn btn-primary">Join quiz</button>
+      <button class="btn btn-primary" id="join-btn">Join quiz</button>
+      <p class="form-error" id="join-error" role="alert" hidden></p>
     </form>
     <p class="hint">Open this page in a <b>second tab</b> and join the same quiz ID to play against yourself.</p>
   </section>
 
   <!-- Game -->
-  <section id="game-view" hidden>
+  <section id="game-view" aria-labelledby="quiz-title" hidden>
     <div class="session">
       <h2 id="quiz-title">Quiz</h2>
       <div class="chips">
-        <span class="chip code" id="code-chip" title="Copy quiz ID"></span>
-        <span class="chip" id="me-chip"></span>
+        <button type="button" class="chip code" id="code-chip" title="Copy quiz ID"></button>
+        <span class="chip" id="me-chip" aria-label="Playing as"></span>
         <button class="btn btn-ghost btn-sm" id="leave">Leave</button>
       </div>
     </div>
 
     <div class="game">
-      <article class="card" id="play">
+      <article class="card" id="play" aria-label="Current question">
         <div class="qhead">
           <div>
             <div class="label" id="progress">Question</div>
@@ -243,16 +254,16 @@
           </div>
           <div class="scorebox">
             <div class="label">Score</div>
-            <div class="score" id="score">0</div>
+            <div class="score" id="score" aria-live="polite">0</div>
             <div class="gain" id="gain"></div>
           </div>
         </div>
 
         <div id="question-area">
-          <div class="timer" id="timer"><div class="track"><div class="fill" id="fill"></div></div><div class="secs" id="secs">20s</div></div>
-          <p class="prompt" id="prompt"></p>
-          <div class="options" id="options"></div>
-          <p class="feedback" id="feedback"></p>
+          <div class="timer" id="timer"><div class="track" aria-hidden="true"><div class="fill" id="fill"></div></div><div class="secs"><span class="sr-only">Time left: </span><span id="secs">20s</span></div></div>
+          <h3 class="prompt loading" id="prompt">Loading the first question…</h3>
+          <div class="options" id="options" role="group" aria-labelledby="prompt"></div>
+          <p class="feedback" id="feedback" aria-live="polite"></p>
           <div class="kbd-hint">Tip: press 1–4 or A–D to answer.</div>
         </div>
 
@@ -272,16 +283,17 @@
         </div>
       </article>
 
-      <aside class="card">
-        <div class="board-head"><h3>Leaderboard</h3><span class="live">Live</span></div>
+      <aside class="card" aria-labelledby="board-title">
+        <div class="board-head"><h3 id="board-title">Leaderboard</h3><span class="live">Live</span></div>
         <ol class="rows" id="rows"></ol>
         <div class="empty" id="empty">Waiting for players…</div>
         <div class="mine" id="mine"></div>
       </aside>
     </div>
   </section>
+  </main>
 </div>
-<div class="toasts" id="toasts"></div>
+<div class="toasts" id="toasts" role="status" aria-live="polite"></div>
 
 <script>
 const $ = (id) => document.getElementById(id);
@@ -294,7 +306,7 @@ const userId = (() => { try { return sessionStorage.quizUser ||= "u" + crypto.ra
                         catch { return "u" + Math.random().toString(36).slice(2, 10); } })();
 
 const state = {
-  ws: null, quizId: "", name: "", attempt: 0, leaving: false,
+  ws: null, quizId: "", name: "", attempt: 0, leaving: false, joined: false, joinError: "",
   lastVersion: -1, current: null, answered: false, chosen: null, deadline: 0, timer: null,
   total: 0, steps: [], correct: 0, answeredHere: 0, score: 0, me: null, players: 0,
 };
@@ -302,26 +314,40 @@ const state = {
 // ---------- join / leave ----------
 try { $("name").value = sessionStorage.quizName || ""; } catch {}
 
+function setJoining(busy) {
+  $("join-btn").disabled = busy;
+  $("join-btn").textContent = busy ? "Joining…" : "Join quiz";
+}
+
+function showJoinError(text) {
+  $("join-error").textContent = text;
+  $("join-error").hidden = !text;
+}
+
 $("join").onsubmit = (e) => {
   e.preventDefault();
   state.quizId = $("quiz").value.trim().toUpperCase();
   state.name = $("name").value.trim();
   try { sessionStorage.quizName = state.name; } catch {}
-  state.attempt = 0; state.leaving = false;
+  state.attempt = 0; state.leaving = false; state.joined = false; state.joinError = "";
+  showJoinError("");
+  setJoining(true);
   connect();
 };
 
 $("create").onclick = async () => {
+  showJoinError("");
   try {
     const res = await fetch("/api/quizzes", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const body = await res.json();
     $("quiz").value = body.quiz_id;
     toast(`New quiz ${body.quiz_id} created. Share the ID with other players.`);
-  } catch { toast("Could not create a quiz. Is the server running?"); }
+  } catch { showJoinError("Could not create a quiz. Is the server running?"); }
 };
 
 $("leave").onclick = () => {
-  state.leaving = true;
+  state.leaving = true; state.current = null;
   state.ws?.close();
   clearInterval(state.timer);
   setStatus("off", "Not connected");
@@ -342,8 +368,11 @@ function connect() {
   ws.onmessage = (e) => handle(JSON.parse(e.data));
   ws.onclose = (e) => {
     if (state.leaving) return;
-    if (e.code === 4404 || e.code === 4400) {
-      setStatus("off", "Could not join");
+    if (e.code === 4404 || e.code === 4400 || !state.joined) {
+      // Never got in: show why on the form instead of retrying forever.
+      setStatus("off", "Not connected");
+      setJoining(false);
+      showJoinError(state.joinError || "Could not reach the quiz server. Check it is running and try again.");
       $("game-view").hidden = true; $("join-view").hidden = false;
       return;
     }
@@ -366,13 +395,17 @@ function handle(m) {
       return;
     case "quiz_complete": return showDone();
     case "error":
-      if (m.code === "quiz_not_found") toast(`Quiz "${state.quizId}" does not exist`);
+      if (m.code === "quiz_not_found") state.joinError = `There is no quiz with the ID "${state.quizId}".`;
+      else if (!state.joined) state.joinError = m.message;
       else if (m.code !== "already_answered") toast(m.message);
       return;
   }
 }
 
 function onJoined(m) {
+  state.joined = true;
+  if (!m.rejoined) { $("feedback").textContent = ""; $("feedback").className = "feedback"; }
+  setJoining(false);
   state.lastVersion = -1;
   state.total = m.quiz.question_count;
   if (!m.rejoined || state.steps.length !== state.total) {
@@ -384,6 +417,7 @@ function onJoined(m) {
   $("me-chip").textContent = m.me.name;
   setScore(m.me.score, false);
   $("join-view").hidden = true; $("game-view").hidden = false;
+  if (!state.current) { $("prompt").textContent = "Loading the next question…"; $("prompt").className = "prompt loading"; }
   if (m.rejoined) toast("Welcome back. Your progress was restored.");
 }
 
@@ -403,7 +437,9 @@ function showQuestion(m) {
   renderSteps(m.index);
   state.currentIndex = m.index;
   $("prompt").textContent = q.prompt;
-  $("feedback").textContent = ""; $("feedback").className = "feedback";
+  $("prompt").className = "prompt";
+  // The server sends the next question right behind answer_result, so the
+  // previous result stays in #feedback instead of being cleared here.
   $("options").replaceChildren(...q.options.map((text, i) => {
     const b = document.createElement("button");
     b.className = "opt";
@@ -438,7 +474,6 @@ function submit(choice) {
   state.answered = true; state.chosen = choice;
   clearInterval(state.timer);
   document.querySelectorAll(".opt").forEach((b, i) => { b.disabled = true; if (i === choice) b.classList.add("picked"); });
-  if (choice === null) { $("feedback").textContent = "Time's up!"; $("feedback").className = "feedback bad"; }
   state.ws.send(JSON.stringify({ type: "answer", question_id: state.current.id, choice, request_id: crypto.randomUUID?.() }));
 }
 
@@ -454,9 +489,17 @@ function showResult(m) {
   state.answeredHere++;
   if (m.correct) state.correct++;
   const fb = $("feedback");
-  if (m.correct && m.points_awarded > 0) { fb.textContent = `Correct! +${m.points_awarded} points (${m.elapsed_s.toFixed(1)}s)`; fb.className = "feedback good"; }
-  else if (m.correct) { fb.textContent = "Correct, but too late for points."; fb.className = "feedback bad"; }
-  else if (state.chosen !== null) { fb.textContent = "Not quite. The right answer is highlighted."; fb.className = "feedback bad"; }
+  const word = state.current?.options[m.correct_index];
+  const label = `Question ${state.currentIndex + 1}: `;
+  if (m.correct && m.points_awarded > 0) {
+    fb.textContent = `${label}correct, +${m.points_awarded} points in ${m.elapsed_s.toFixed(1)}s.`; fb.className = "feedback good";
+  } else if (m.correct) {
+    fb.textContent = `${label}correct, but too late for points.`; fb.className = "feedback bad";
+  } else if (state.chosen === null) {
+    fb.textContent = `${label}time's up. The answer was “${word}”.`; fb.className = "feedback bad";
+  } else {
+    fb.textContent = `${label}not quite. The answer was “${word}”.`; fb.className = "feedback bad";
+  }
   if (m.points_awarded > 0) {
     const g = $("gain"); g.textContent = `+${m.points_awarded}`;
     g.classList.remove("show"); void g.offsetWidth; g.classList.add("show");
@@ -498,7 +541,7 @@ function initials(name) { return name.split(/\s+/).filter(Boolean).slice(0, 2).m
 
 function makeRow() {
   const li = document.createElement("li"); li.className = "row";
-  li.innerHTML = '<span class="rank"></span><span class="avatar"></span><div class="who"><div class="name"></div><div class="bar"><i></i></div></div><span class="pts"></span>';
+  li.innerHTML = '<span class="rank"></span><span class="avatar" aria-hidden="true"></span><div class="who"><div class="name"></div><div class="bar"><i></i></div></div><span class="pts"></span>';
   return li;
 }
 
@@ -516,7 +559,7 @@ function renderBoard(m) {
     el.classList.toggle("me", e.user_id === userId);
     el.querySelector(".rank").textContent = e.rank;
     const av = el.querySelector(".avatar"); av.textContent = initials(e.name);
-    av.style.background = `linear-gradient(135deg, hsl(${hue(e.user_id)} 70% 58%), hsl(${(hue(e.user_id) + 40) % 360} 70% 48%))`;
+    av.style.background = `hsl(${hue(e.user_id)} 38% 36%)`;  // muted, white text stays above 4.5:1
     const nm = el.querySelector(".name"); nm.textContent = e.name;
     if (e.user_id === userId) { const y = document.createElement("span"); y.className = "you"; y.textContent = "YOU"; nm.append(y); }
     el.querySelector(".bar i").style.width = `${(e.score / max) * 100}%`;
@@ -549,7 +592,7 @@ function toast(text) {
 
 function confetti() {
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  const colors = ["#5b5bf6", "#20b8e6", "#12a15e", "#f2b100", "#e5383b", "#ff8a00"];
+  const colors = ["#1f6f54", "#d9962b", "#237a4b", "#b4382e", "#6cc29c", "#f0b552"];
   for (let i = 0; i < 70; i++) {
     const c = document.createElement("span"); c.className = "confetti";
     c.style.left = `${Math.random() * 100}vw`;
