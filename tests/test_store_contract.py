@@ -125,3 +125,9 @@ async def test_activity_refreshes_redis_ttl(store):
     await store.record_answer("Q", "alice", "q1", 100)
     for suffix in ("lb", "ver", "served", "ans:alice"):
         assert await redis.ttl(f"quiz:{{Q}}:{suffix}") > 5, suffix
+
+
+async def test_registered_session_title_is_shared(store):
+    assert await store.session_title("NEW1") is None
+    await store.register_session("NEW1", "Friday")
+    assert await store.session_title("NEW1") == "Friday"

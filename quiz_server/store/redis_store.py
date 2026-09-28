@@ -3,6 +3,7 @@
 Key layout (the {quiz_id} hash tag keeps every key of a quiz in one Redis
 Cluster slot, so Lua scripts and pipelines stay single-shard):
 
+    quiz:{id}:meta           STRING session title (sessions made via the API)
     quiz:{id}:names          HASH   user_id -> display name
     quiz:{id}:lb             ZSET   user_id -> NEGATED score (see below)
     quiz:{id}:ver            STRING monotonically increasing state version
@@ -24,12 +25,12 @@ from redis.asyncio import BlockingConnectionPool, Redis
 
 from .base import AnswerOutcome, LeaderboardEntry, ParticipantState, SessionStore
 
-# KEYS: names, lb, ver, served   ARGV: user_id, name, ttl
+# KEYS: names, lb, ver, served, meta   ARGV: user_id, name, ttl
 _ADD_PARTICIPANT = """
 redis.call('HSET', KEYS[1], ARGV[1], ARGV[2])
 local added = redis.call('ZADD', KEYS[2], 'NX', 0, ARGV[1])
 if added == 1 then redis.call('INCR', KEYS[3]) end
-for i = 1, 4 do redis.call('EXPIRE', KEYS[i], ARGV[3]) end
+for i = 1, 5 do redis.call('EXPIRE', KEYS[i], ARGV[3]) end
 return added
 """
 
@@ -82,8 +83,15 @@ class RedisStore(SessionStore):
     def _k(quiz_id: str, suffix: str) -> str:
         return f"quiz:{{{quiz_id}}}:{suffix}"
 
+    async def register_session(self, quiz_id: str, title: str) -> None:
+        await self._r.set(self._k(quiz_id, "meta"), title, ex=self._ttl)
+
+    async def session_title(self, quiz_id: str) -> str | None:
+        raw = await self._r.get(self._k(quiz_id, "meta"))
+        return None if raw is None else _s(raw)
+
     async def add_participant(self, quiz_id: str, user_id: str, name: str) -> bool:
-        keys = [self._k(quiz_id, s) for s in ("names", "lb", "ver", "served")]
+        keys = [self._k(quiz_id, s) for s in ("names", "lb", "ver", "served", "meta")]
         added = await self._add_participant(keys=keys, args=[user_id, name, self._ttl])
         return int(added) == 1
 

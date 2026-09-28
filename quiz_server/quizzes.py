@@ -74,6 +74,10 @@ class QuizRepository:
     def create_session(self, title: str | None = None) -> Quiz:
         """Create a new quiz session with a unique, hard-to-guess ID."""
         quiz_id = secrets.token_urlsafe(6).replace("-", "x").replace("_", "y").upper()
-        quiz = Quiz(id=quiz_id, title=title or "Vocabulary Quiz", questions=_DEMO_QUESTIONS)
+        return self.adopt_session(quiz_id, title or "Vocabulary Quiz")
+
+    def adopt_session(self, quiz_id: str, title: str) -> Quiz:
+        """Load a session another node created (its ID and title came from the store)."""
+        quiz = Quiz(id=quiz_id, title=title, questions=_DEMO_QUESTIONS)
         self.add(quiz)
         return quiz

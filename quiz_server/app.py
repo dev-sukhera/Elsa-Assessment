@@ -31,7 +31,7 @@ from .connection import Connection, TokenBucket
 from .hub import Hub
 from .observability import Metrics, configure_logging
 from .protocol import USER_ID_RE, AnswerMsg, ClientMessage, ErrorCode, PingMsg, clean_name, error
-from .quizzes import QuizRepository
+from .quizzes import Quiz, QuizRepository
 from .service import QuizService
 from .store import InMemoryStore, SessionStore
 
@@ -84,6 +84,13 @@ def create_app(settings: Settings | None = None, *, store: SessionStore | None =
     app = FastAPI(title="Real-Time Vocabulary Quiz", lifespan=lifespan)
     app.state.settings, app.state.store, app.state.hub, app.state.metrics = settings, store, hub, metrics
 
+    async def find_quiz(quiz_id: str) -> Quiz | None:
+        # Sessions created on another node are only known through the store.
+        quiz = quizzes.get(quiz_id)
+        if quiz is None and (title := await store.session_title(quiz_id)) is not None:
+            quiz = quizzes.adopt_session(quiz_id, title)
+        return quiz
+
     # -- REST --------------------------------------------------------------
     @app.get("/", include_in_schema=False)
     async def index() -> FileResponse:
@@ -105,11 +112,12 @@ def create_app(settings: Settings | None = None, *, store: SessionStore | None =
     @app.post("/api/quizzes", status_code=201)
     async def create_quiz(body: CreateQuizBody | None = None) -> dict:
         quiz = quizzes.create_session(body.title if body else None)
+        await store.register_session(quiz.id, quiz.title)
         return {"quiz_id": quiz.id, "title": quiz.title, "question_count": len(quiz.questions)}
 
     @app.get("/api/quizzes/{quiz_id}/leaderboard")
     async def get_leaderboard(quiz_id: str, top: int = Query(10, ge=1, le=100)) -> dict:
-        if quizzes.get(quiz_id) is None:
+        if await find_quiz(quiz_id) is None:
             raise HTTPException(404, "quiz not found")
         entries, total, version = await store.leaderboard(quiz_id, top)
         return {"quiz_id": quiz_id, "version": version, "total_participants": total,
@@ -125,7 +133,7 @@ def create_app(settings: Settings | None = None, *, store: SessionStore | None =
             await ws.send_json(error(ErrorCode.BAD_REQUEST, "user_id must be 1-64 chars of [A-Za-z0-9_.-]"))
             await ws.close(code=CLOSE_BAD_REQUEST)
             return
-        quiz = quizzes.get(quiz_id)
+        quiz = await find_quiz(quiz_id)
         if quiz is None:
             metrics.joins.labels("quiz_not_found").inc()
             await ws.send_json(error(ErrorCode.QUIZ_NOT_FOUND, f"Quiz '{quiz_id}' does not exist"))

@@ -39,3 +39,13 @@ def test_score_on_node_b_reaches_leaderboard_on_node_a():
             # keeps her place in the quiz.
             with join(node_b, "alice", "Alice") as (_, joined, q):
                 assert joined["rejoined"] is True and q["question"]["id"] == "q1"
+
+
+def test_quiz_created_on_one_node_can_be_joined_on_another():
+    server, clock = fakeredis.FakeServer(), FakeClock()
+    with TestClient(make_node(server, clock)) as node_a, TestClient(make_node(server, clock)) as node_b:
+        quiz_id = node_a.post("/api/quizzes", json={"title": "Friday"}).json()["quiz_id"]
+        assert node_b.get(f"/api/quizzes/{quiz_id}/leaderboard").status_code == 200
+        with join(node_b, "bob", quiz_id=quiz_id) as (_, joined, q):
+            assert joined["quiz"] == {"id": quiz_id, "title": "Friday", "question_count": 5}
+            assert q["question"]["id"] == "q1"

@@ -46,6 +46,14 @@ class ParticipantState:
 
 class SessionStore(abc.ABC):
     @abc.abstractmethod
+    async def register_session(self, quiz_id: str, title: str) -> None:
+        """Record a newly created quiz session so every node can resolve its ID."""
+
+    @abc.abstractmethod
+    async def session_title(self, quiz_id: str) -> str | None:
+        """Title of a session created through register_session, or None."""
+
+    @abc.abstractmethod
     async def add_participant(self, quiz_id: str, user_id: str, name: str) -> bool:
         """Register a participant with score 0. Idempotent. Returns True if new."""
 

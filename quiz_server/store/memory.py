@@ -45,9 +45,16 @@ class _Session:
 class InMemoryStore(SessionStore):
     def __init__(self) -> None:
         self._sessions: dict[str, _Session] = {}
+        self._titles: dict[str, str] = {}
 
     def _s(self, quiz_id: str) -> _Session:
         return self._sessions.setdefault(quiz_id, _Session())
+
+    async def register_session(self, quiz_id: str, title: str) -> None:
+        self._titles[quiz_id] = title
+
+    async def session_title(self, quiz_id: str) -> str | None:
+        return self._titles.get(quiz_id)
 
     async def add_participant(self, quiz_id: str, user_id: str, name: str) -> bool:
         s = self._s(quiz_id)
