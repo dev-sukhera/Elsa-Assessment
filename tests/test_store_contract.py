@@ -14,7 +14,7 @@ import pytest
 from quiz_server.store import InMemoryStore
 from quiz_server.store.redis_store import RedisStore, connect
 
-# Set QUIZ_TEST_REDIS_URL (CI does) to also run the contract against a real
+# Set QUIZ_TEST_REDIS_URL to also run the contract against a real
 # Redis server. The database it points at is flushed before every test.
 REAL_REDIS_URL = os.environ.get("QUIZ_TEST_REDIS_URL")
 BACKENDS = ["memory", "fakeredis"] + (["redis"] if REAL_REDIS_URL else [])
