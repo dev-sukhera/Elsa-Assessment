@@ -1,10 +1,13 @@
 PY ?= .venv/bin/python
 PACKAGE := dist/realtime-quiz-submission.zip
 
-.PHONY: install test mutation run run-redis load-test clean package
+.PHONY: install lint test mutation run run-redis load-test clean package
 
 install:
 	python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
+
+lint:
+	$(PY) -m ruff check .
 
 test:
 	$(PY) -m pytest -q --timeout 30
