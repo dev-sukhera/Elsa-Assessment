@@ -40,9 +40,9 @@ if redis.call('HSETNX', KEYS[1], ARGV[1], ARGV[2]) == 0 then
   local v = redis.call('GET', KEYS[3])
   return {0, s or '0', v or '0'}
 end
-redis.call('EXPIRE', KEYS[1], ARGV[4])
 local s = redis.call('ZINCRBY', KEYS[2], -tonumber(ARGV[2]), ARGV[3])
 local v = redis.call('INCR', KEYS[3])
+for i = 1, 3 do redis.call('EXPIRE', KEYS[i], ARGV[4]) end
 return {1, s, v}
 """
 
@@ -80,7 +80,8 @@ class RedisStore(SessionStore):
         async with self._r.pipeline(transaction=True) as p:
             p.hsetnx(key, field, repr(ts))
             p.hget(key, field)
-            _, first = await p.execute()
+            p.expire(key, self._ttl)
+            _, first, _ = await p.execute()
         return float(_s(first))
 
     async def served_at(self, quiz_id: str, user_id: str, question_id: str) -> float | None:

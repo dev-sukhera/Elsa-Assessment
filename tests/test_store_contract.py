@@ -6,22 +6,34 @@ double-count, which is the core "accurate and consistent scoring" criterion.
 """
 
 import asyncio
+import os
 
 import fakeredis
 import pytest
+from redis.asyncio import Redis
 
 from quiz_server.store import InMemoryStore
 from quiz_server.store.redis_store import RedisStore
 
+# Set QUIZ_TEST_REDIS_URL (CI does) to also run the contract against a real
+# Redis server. The database it points at is flushed before every test.
+REAL_REDIS_URL = os.environ.get("QUIZ_TEST_REDIS_URL")
+BACKENDS = ["memory", "fakeredis"] + (["redis"] if REAL_REDIS_URL else [])
 
-@pytest.fixture(params=["memory", "redis"])
+
+@pytest.fixture(params=BACKENDS)
 async def store(request):
     if request.param == "memory":
         yield InMemoryStore()
+        return
+    if request.param == "fakeredis":
+        redis = fakeredis.FakeAsyncRedis(server=fakeredis.FakeServer())
     else:
-        s = RedisStore(fakeredis.FakeAsyncRedis(server=fakeredis.FakeServer()))
-        yield s
-        await s.close()
+        redis = Redis.from_url(REAL_REDIS_URL)
+        await redis.flushdb()
+    s = RedisStore(redis, ttl_s=3600)
+    yield s
+    await s.close()
 
 
 async def test_add_participant_is_idempotent(store):
@@ -101,3 +113,16 @@ async def test_unknown_quiz_is_empty(store):
     assert await store.leaderboard("nope", 10) == ([], 0, 0)
     assert await store.ranks("nope", ["x"]) == {}
     assert await store.version("nope") == 0
+
+
+async def test_activity_refreshes_redis_ttl(store):
+    if not isinstance(store, RedisStore):
+        pytest.skip("TTL only applies to the Redis store")
+    redis = store._r
+    await store.add_participant("Q", "alice", "Alice")
+    for suffix in ("lb", "ver", "served"):
+        await redis.expire(f"quiz:{{Q}}:{suffix}", 5)
+    await store.mark_served("Q", "alice", "q1", 1000.0)
+    await store.record_answer("Q", "alice", "q1", 100)
+    for suffix in ("lb", "ver", "served", "ans:alice"):
+        assert await redis.ttl(f"quiz:{{Q}}:{suffix}") > 5, suffix
