@@ -1,0 +1,25 @@
+# Two stateless quiz nodes behind nginx, sharing one Redis.
+# Players on different nodes see the same live leaderboard.
+#   docker compose up --build   ->  http://localhost:8080
+# NOTE: written for the submission but not run in the authoring environment
+# (no Docker available there). The multi-node path itself is covered by
+# tests/test_multinode.py.
+services:
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+
+  quiz-a: &quiz
+    build: .
+    environment:
+      QUIZ_STORE: redis
+      QUIZ_REDIS_URL: redis://redis:6379/0
+    depends_on: [redis]
+
+  quiz-b: *quiz
+
+  lb:
+    image: nginx:1.27-alpine
+    ports: ["8080:80"]
+    volumes: ["./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro"]
+    depends_on: [quiz-a, quiz-b]

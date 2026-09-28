@@ -1,0 +1,192 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1320 830" width="1320" height="830" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475467"/>
+    </marker>
+    <marker id="arrR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#d92d20"/>
+    </marker>
+    <style>
+      .t  { font-size: 15px; font-weight: 700; fill: #101828; }
+      .s  { font-size: 12px; fill: #475467; }
+      .xs { font-size: 11px; fill: #667085; }
+      .lab{ font-size: 11.5px; fill: #344054; font-weight: 600; }
+      .h  { font-size: 13px; font-weight: 700; letter-spacing: .06em; fill: #5b5bf6; }
+      .impl { fill: #eef0ff; stroke: #5b5bf6; stroke-width: 1.6; }
+      .mod  { fill: #ffffff; stroke: #a5a8fb; stroke-width: 1.2; }
+      .cli  { fill: #eaf8fd; stroke: #20b8e6; stroke-width: 1.6; }
+      .red  { fill: #fff1f0; stroke: #e5383b; stroke-width: 1.6; }
+      .redm { fill: #ffffff; stroke: #f5a3a3; stroke-width: 1.2; }
+      .gray { fill: #f5f6f9; stroke: #667085; stroke-width: 1.6; }
+      .mock { fill: #fafafb; stroke: #98a2b3; stroke-width: 1.4; stroke-dasharray: 6 4; }
+      .line { stroke: #475467; stroke-width: 1.6; fill: none; }
+      .dash { stroke: #667085; stroke-width: 1.4; fill: none; stroke-dasharray: 5 4; }
+      .rline{ stroke: #d92d20; stroke-width: 1.6; fill: none; }
+      .step { fill: #ffffff; stroke: #d0d5dd; stroke-width: 1.2; }
+      .num  { fill: #5b5bf6; }
+    </style>
+  </defs>
+
+  <rect width="1320" height="830" fill="#ffffff"/>
+
+  <!-- Title + legend -->
+  <text x="30" y="44" font-size="22" font-weight="800" fill="#101828">Real-Time Vocabulary Quiz: Architecture</text>
+  <text x="30" y="66" class="s">Stateless quiz nodes, all live state in Redis, coalesced leaderboard fan-out</text>
+  <rect x="930" y="30" width="26" height="16" rx="4" class="impl"/>
+  <text x="964" y="43" class="s">Implemented</text>
+  <rect x="1060" y="30" width="26" height="16" rx="4" class="mock"/>
+  <text x="1094" y="43" class="s">Mocked / designed only</text>
+
+  <!-- Clients -->
+  <rect x="30" y="150" width="180" height="220" rx="14" class="cli"/>
+  <text x="120" y="176" text-anchor="middle" class="t">Client apps</text>
+  <rect x="45" y="192" width="150" height="72" rx="10" fill="#fff" stroke="#8fdcf3"/>
+  <text x="120" y="220" text-anchor="middle" class="t" font-size="14">Web app</text>
+  <text x="120" y="238" text-anchor="middle" class="xs">demo in client/index.html</text>
+  <text x="120" y="252" text-anchor="middle" class="xs">auto-reconnect</text>
+  <rect x="45" y="278" width="150" height="72" rx="10" fill="#fff" stroke="#8fdcf3" stroke-dasharray="6 4"/>
+  <text x="120" y="306" text-anchor="middle" class="t" font-size="14">Mobile app</text>
+  <text x="120" y="324" text-anchor="middle" class="xs">same WebSocket</text>
+  <text x="120" y="338" text-anchor="middle" class="xs">protocol</text>
+
+  <!-- Load balancer -->
+  <rect x="290" y="210" width="160" height="100" rx="14" class="gray"/>
+  <text x="370" y="240" text-anchor="middle" class="t">Load balancer</text>
+  <text x="370" y="260" text-anchor="middle" class="xs">TLS · WebSocket upgrade</text>
+  <text x="370" y="276" text-anchor="middle" class="xs">least connections</text>
+  <text x="370" y="292" text-anchor="middle" class="xs">no sticky sessions</text>
+
+  <path d="M212,260 L288,260" class="line" marker-start="url(#arr)" marker-end="url(#arr)"/>
+  <text x="250" y="250" text-anchor="middle" class="lab">wss://</text>
+
+  <!-- Real-time tier -->
+  <rect x="530" y="92" width="420" height="410" rx="16" class="impl"/>
+  <text x="740" y="118" text-anchor="middle" class="h">REAL-TIME QUIZ SERVICE · STATELESS NODES</text>
+
+  <rect x="550" y="134" width="380" height="258" rx="12" fill="#f8f8ff" stroke="#5b5bf6"/>
+  <text x="740" y="156" text-anchor="middle" class="t" font-size="14">Node 1 (Python · FastAPI · asyncio)</text>
+
+  <rect x="565" y="168" width="350" height="48" rx="8" class="mod"/>
+  <text x="580" y="189" class="t" font-size="13.5">WebSocket endpoint</text>
+  <text x="580" y="206" class="xs">join by quiz ID · validation · size + rate limits · app.py</text>
+  <rect x="565" y="222" width="350" height="48" rx="8" class="mod"/>
+  <text x="580" y="243" class="t" font-size="13.5">Quiz service + scoring</text>
+  <text x="580" y="260" class="xs">server-side timer · 100 pts + speed bonus · service.py</text>
+  <rect x="565" y="276" width="350" height="48" rx="8" class="mod"/>
+  <text x="580" y="297" class="t" font-size="13.5">Hub: coalesced leaderboard</text>
+  <text x="580" y="314" class="xs">≤ 1 push per quiz per 100 ms · top 10 + my rank · hub.py</text>
+  <rect x="565" y="330" width="350" height="48" rx="8" class="mod"/>
+  <text x="580" y="351" class="t" font-size="13.5">Connection writers</text>
+  <text x="580" y="368" class="xs">bounded queue · latest-wins board · slow-client cut · connection.py</text>
+
+  <rect x="550" y="410" width="180" height="70" rx="12" fill="#f8f8ff" stroke="#5b5bf6"/>
+  <text x="640" y="440" text-anchor="middle" class="t" font-size="14">Node 2</text>
+  <text x="640" y="458" text-anchor="middle" class="xs">identical, any quiz</text>
+  <rect x="750" y="410" width="180" height="70" rx="12" fill="#f8f8ff" stroke="#5b5bf6"/>
+  <text x="840" y="440" text-anchor="middle" class="t" font-size="14">Node N</text>
+  <text x="840" y="458" text-anchor="middle" class="xs">scale out horizontally</text>
+
+  <path d="M452,260 L548,260" class="line" marker-end="url(#arr)"/>
+
+  <!-- Redis -->
+  <rect x="1060" y="134" width="230" height="346" rx="16" class="red"/>
+  <text x="1175" y="160" text-anchor="middle" class="t">Redis (Cluster)</text>
+  <text x="1175" y="177" text-anchor="middle" class="xs">or in-memory store for one node</text>
+  <rect x="1075" y="190" width="200" height="40" rx="8" class="redm"/>
+  <text x="1090" y="215" class="s"><tspan font-weight="700" fill="#101828">Leaderboard</tspan> · sorted set</text>
+  <rect x="1075" y="236" width="200" height="40" rx="8" class="redm"/>
+  <text x="1090" y="261" class="s"><tspan font-weight="700" fill="#101828">Answers</tspan> · exactly once</text>
+  <rect x="1075" y="282" width="200" height="40" rx="8" class="redm"/>
+  <text x="1090" y="307" class="s"><tspan font-weight="700" fill="#101828">Question timers</tspan></text>
+  <rect x="1075" y="328" width="200" height="40" rx="8" class="redm"/>
+  <text x="1090" y="353" class="s"><tspan font-weight="700" fill="#101828">Version</tspan> · ordering</text>
+  <rect x="1075" y="392" width="200" height="72" rx="8" fill="#ffe4e2" stroke="#e5383b"/>
+  <text x="1175" y="420" text-anchor="middle" class="t" font-size="14">Pub/Sub</text>
+  <text x="1175" y="440" text-anchor="middle" class="xs">"quiz X changed"</text>
+  <text x="1175" y="454" text-anchor="middle" class="xs">channel per quiz</text>
+
+  <path d="M932,240 L1058,240" class="line" marker-end="url(#arr)"/>
+  <text x="995" y="230" text-anchor="middle" class="lab">atomic Lua score</text>
+  <path d="M1058,300 L932,300" class="line" marker-end="url(#arr)"/>
+  <text x="995" y="290" text-anchor="middle" class="lab">top N + ranks</text>
+  <path d="M1073,428 L1000,428 L1000,445 L932,445" class="rline" marker-end="url(#arrR)"/>
+  <text x="1000" y="418" text-anchor="middle" class="lab" fill="#b42318">notify all nodes</text>
+
+  <!-- Bottom: mocked / designed -->
+  <rect x="30" y="580" width="180" height="100" rx="14" class="mock"/>
+  <text x="120" y="610" text-anchor="middle" class="t">Auth service</text>
+  <text x="120" y="630" text-anchor="middle" class="xs">issues JWT</text>
+  <text x="120" y="648" text-anchor="middle" class="xs">mocked: user_id in URL</text>
+  <path d="M120,372 L120,578" class="dash" marker-end="url(#arr)"/>
+  <text x="128" y="480" class="lab">login</text>
+
+  <rect x="250" y="580" width="240" height="100" rx="14" class="mock"/>
+  <text x="370" y="610" text-anchor="middle" class="t">Quiz Content service</text>
+  <text x="370" y="630" text-anchor="middle" class="xs">PostgreSQL · quiz definitions</text>
+  <text x="370" y="648" text-anchor="middle" class="xs">mocked: in-memory demo quiz</text>
+  <path d="M600,504 L600,540 L370,540 L370,578" class="dash" marker-end="url(#arr)"/>
+  <text x="485" y="532" text-anchor="middle" class="lab">quiz definitions (cached)</text>
+
+  <rect x="530" y="580" width="420" height="100" rx="14" class="mock"/>
+  <text x="740" y="604" text-anchor="middle" class="t">Durable results (designed)</text>
+  <rect x="545" y="618" width="120" height="48" rx="8" fill="#fff" stroke="#c4c9d4"/>
+  <text x="605" y="638" text-anchor="middle" class="s" font-weight="700" fill="#101828">Event stream</text>
+  <text x="605" y="654" text-anchor="middle" class="xs">Kafka / Streams</text>
+  <rect x="680" y="618" width="120" height="48" rx="8" fill="#fff" stroke="#c4c9d4"/>
+  <text x="740" y="638" text-anchor="middle" class="s" font-weight="700" fill="#101828">Results worker</text>
+  <text x="740" y="654" text-anchor="middle" class="xs">async consumer</text>
+  <rect x="815" y="618" width="120" height="48" rx="8" fill="#fff" stroke="#c4c9d4"/>
+  <text x="875" y="638" text-anchor="middle" class="s" font-weight="700" fill="#101828">PostgreSQL</text>
+  <text x="875" y="654" text-anchor="middle" class="xs">history, analytics</text>
+  <path d="M665,642 L678,642" class="line" marker-end="url(#arr)"/>
+  <path d="M800,642 L813,642" class="line" marker-end="url(#arr)"/>
+  <path d="M760,504 L760,578" class="dash" marker-end="url(#arr)"/>
+  <text x="768" y="545" class="lab">answer events</text>
+
+  <rect x="990" y="580" width="300" height="100" rx="14" fill="#f8f8ff" stroke="#5b5bf6" stroke-width="1.6"/>
+  <text x="1140" y="606" text-anchor="middle" class="t">Observability</text>
+  <text x="1140" y="627" text-anchor="middle" class="xs">implemented: /metrics (Prometheus) · JSON logs</text>
+  <text x="1140" y="643" text-anchor="middle" class="xs">/healthz · /readyz</text>
+  <text x="1140" y="664" text-anchor="middle" class="xs">designed: Grafana, alerts, OpenTelemetry</text>
+  <path d="M900,504 L900,550 L1140,550 L1140,578" class="dash" marker-end="url(#arr)"/>
+  <text x="1020" y="542" text-anchor="middle" class="lab">metrics · logs</text>
+
+  <!-- Data flow strip -->
+  <text x="30" y="722" font-size="14" font-weight="800" fill="#101828">Data flow: from joining to the leaderboard update</text>
+  <g>
+    <rect x="30"   y="738" width="200" height="66" rx="10" class="step"/>
+    <circle cx="52" cy="760" r="11" class="num"/><text x="52" y="764" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">1</text>
+    <text x="70" y="764" class="t" font-size="13">Join by quiz ID</text>
+    <text x="42" y="788" class="xs">registered once, state resumes</text>
+
+    <rect x="242"  y="738" width="200" height="66" rx="10" class="step"/>
+    <circle cx="264" cy="760" r="11" class="num"/><text x="264" y="764" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">2</text>
+    <text x="282" y="764" class="t" font-size="13">Question served</text>
+    <text x="254" y="788" class="xs">server records the start time</text>
+
+    <rect x="454"  y="738" width="200" height="66" rx="10" class="step"/>
+    <circle cx="476" cy="760" r="11" class="num"/><text x="476" y="764" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">3</text>
+    <text x="494" y="764" class="t" font-size="13">Answer scored</text>
+    <text x="466" y="788" class="xs">one atomic Lua call, no doubles</text>
+
+    <rect x="666"  y="738" width="200" height="66" rx="10" class="step"/>
+    <circle cx="688" cy="760" r="11" class="num"/><text x="688" y="764" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">4</text>
+    <text x="706" y="764" class="t" font-size="13">Own score, instantly</text>
+    <text x="678" y="788" class="xs">answer_result to the player</text>
+
+    <rect x="878"  y="738" width="200" height="66" rx="10" class="step"/>
+    <circle cx="900" cy="760" r="11" class="num"/><text x="900" y="764" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">5</text>
+    <text x="918" y="764" class="t" font-size="13">"Quiz changed"</text>
+    <text x="890" y="788" class="xs">pub/sub reaches every node</text>
+
+    <rect x="1090" y="738" width="200" height="66" rx="10" class="step"/>
+    <circle cx="1112" cy="760" r="11" class="num"/><text x="1112" y="764" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">6</text>
+    <text x="1130" y="764" class="t" font-size="13">Leaderboard push</text>
+    <text x="1102" y="788" class="xs">coalesced, every 100 ms at most</text>
+  </g>
+  <path d="M230,771 L240,771" class="line" marker-end="url(#arr)"/>
+  <path d="M442,771 L452,771" class="line" marker-end="url(#arr)"/>
+  <path d="M654,771 L664,771" class="line" marker-end="url(#arr)"/>
+  <path d="M866,771 L876,771" class="line" marker-end="url(#arr)"/>
+  <path d="M1078,771 L1088,771" class="line" marker-end="url(#arr)"/>
+</svg>

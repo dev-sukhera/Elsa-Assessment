@@ -1,0 +1,32 @@
+# Virtual environments
+.venv/
+venv/
+project_venv/
+node_modules/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Python caches and tooling
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage/
+htmlcov/
+
+# Build output (make package writes the submission zip here)
+dist/
+build/
+*.egg-info/
+
+# Logs and scratch
+*.log
+logs/
+tmp/
+
+.DS_Store
