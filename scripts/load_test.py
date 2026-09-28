@@ -29,6 +29,12 @@ import urllib.request
 import websockets
 
 
+def http_json(url: str, body: bytes | None = None) -> dict:
+    req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(req) as res:
+        return json.load(res)
+
+
 async def player(url: str, quiz_id: str, user_id: str, think_ms: int, stats: dict, delay_s: float = 0) -> None:
     await asyncio.sleep(delay_s)
     async with websockets.connect(f"{url}/ws/quizzes/{quiz_id}?user_id={user_id}&name={user_id}",
@@ -37,7 +43,7 @@ async def player(url: str, quiz_id: str, user_id: str, think_ms: int, stats: dic
         awaiting_version: tuple[int, float] | None = None
         earned = 0
         final_score = None
-        pending = None
+        thinking: set[asyncio.Task] = set()  # keep references so tasks are not garbage-collected
         async for raw in ws:
             m = json.loads(raw)
             t = m["type"]
@@ -51,7 +57,9 @@ async def player(url: str, quiz_id: str, user_id: str, think_ms: int, stats: dic
                     sent_at = time.perf_counter()
                     choice = random.randrange(len(q["options"]))
                     await ws.send(json.dumps({"type": "answer", "question_id": q["id"], "choice": choice}))
-                pending = asyncio.create_task(think_then_answer())
+                task = asyncio.create_task(think_then_answer())
+                thinking.add(task)
+                task.add_done_callback(thinking.discard)
             elif t == "answer_result":
                 stats["rtt"].append(time.perf_counter() - sent_at)
                 earned += m["points_awarded"]
@@ -89,10 +97,8 @@ async def main() -> None:
     args = ap.parse_args()
 
     http = args.url.replace("ws://", "http://").replace("wss://", "https://")
-    quiz_ids = []
-    for _ in range(args.quizzes):
-        req = urllib.request.Request(f"{http}/api/quizzes", data=b"{}", headers={"Content-Type": "application/json"})
-        quiz_ids.append(json.load(urllib.request.urlopen(req))["quiz_id"])
+    quiz_ids = [(await asyncio.to_thread(http_json, f"{http}/api/quizzes", b"{}"))["quiz_id"]
+                for _ in range(args.quizzes)]
 
     stats = {"rtt": [], "lb_latency": [], "leaderboards": 0, "errors": [], "mismatch": 0, "done": 0}
     started = time.perf_counter()
@@ -104,10 +110,8 @@ async def main() -> None:
     failures = [r for r in results if isinstance(r, Exception)]
 
     # Cross-check: the REST leaderboard must list every player of each quiz.
-    board_ok = all(
-        json.load(urllib.request.urlopen(f"{http}/api/quizzes/{q}/leaderboard"))["total_participants"] == args.players
-        for q in quiz_ids
-    )
+    boards = [await asyncio.to_thread(http_json, f"{http}/api/quizzes/{q}/leaderboard") for q in quiz_ids]
+    board_ok = all(b["total_participants"] == args.players for b in boards)
 
     print(f"players            {total} ({args.quizzes} quizzes x {args.players})")
     print(f"completed          {stats['done']}   connection failures: {len(failures)}")
