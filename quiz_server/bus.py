@@ -19,7 +19,7 @@ import abc
 import asyncio
 import contextlib
 import logging
-from typing import Callable
+from collections.abc import Callable
 
 from redis.asyncio import Redis
 
@@ -35,8 +35,11 @@ class UpdateBus(abc.ABC):
     def set_handler(self, handler: Handler) -> None:
         self._handler = handler
 
-    async def start(self) -> None: ...
-    async def stop(self) -> None: ...
+    async def start(self) -> None:  # noqa: B027 - optional hook, LocalBus needs no setup
+        pass
+
+    async def stop(self) -> None:  # noqa: B027 - optional hook, LocalBus needs no teardown
+        pass
 
     @abc.abstractmethod
     async def publish(self, quiz_id: str) -> None: ...

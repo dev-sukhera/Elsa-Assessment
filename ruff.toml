@@ -1,0 +1,8 @@
+line-length = 120
+target-version = "py310"
+
+[lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "ASYNC"]
+# Nested `with` blocks in the tests mirror "player A is connected, then
+# player B joins"; flattening them hides that order.
+ignore = ["SIM117"]

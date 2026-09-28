@@ -117,7 +117,7 @@ class RedisStore(SessionStore):
         names = await self._r.hmget(self._k(quiz_id, "names"), user_ids)
         entries = [
             LeaderboardEntry(rank=i + 1, user_id=u, name=_s(n) if n else u, score=_to_score(sc))
-            for i, ((_, sc), u, n) in enumerate(zip(top, user_ids, names))
+            for i, ((_, sc), u, n) in enumerate(zip(top, user_ids, names, strict=True))
         ]
         return entries, int(total), int(_s(version)) if version else 0
 

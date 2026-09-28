@@ -12,7 +12,6 @@ from __future__ import annotations
 import json
 import logging
 import sys
-import time
 
 from prometheus_client import CollectorRegistry, Counter, Gauge, Histogram
 
@@ -70,12 +69,3 @@ def configure_logging(level: str = "INFO") -> None:
     root.handlers[:] = [handler]
     root.setLevel(level)
     root.propagate = False
-
-
-class Timer:
-    def __enter__(self) -> "Timer":
-        self.start = time.perf_counter()
-        return self
-
-    def __exit__(self, *exc: object) -> None:
-        self.elapsed = time.perf_counter() - self.start

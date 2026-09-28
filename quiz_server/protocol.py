@@ -15,7 +15,7 @@ AI-ASSISTED (Claude Code).
 from __future__ import annotations
 
 import re
-from typing import Annotated, Literal, Union
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, TypeAdapter
 
@@ -34,7 +34,7 @@ class PingMsg(BaseModel):
     type: Literal["ping"]
 
 
-ClientMessage = TypeAdapter(Annotated[Union[AnswerMsg, PingMsg], Field(discriminator="type")])
+ClientMessage = TypeAdapter(Annotated[AnswerMsg | PingMsg, Field(discriminator="type")])
 
 
 class ErrorCode:

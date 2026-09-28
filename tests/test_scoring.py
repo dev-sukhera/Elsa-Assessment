@@ -23,5 +23,5 @@ def test_score_answer(correct, elapsed, limit, expected):
 
 
 def test_faster_never_scores_less():
-    scores = [score_answer(correct=True, elapsed_s=t / 10, time_limit_s=20) for t in range(0, 201)]
+    scores = [score_answer(correct=True, elapsed_s=t / 10, time_limit_s=20) for t in range(201)]
     assert scores == sorted(scores, reverse=True)

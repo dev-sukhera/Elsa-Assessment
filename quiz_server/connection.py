@@ -13,12 +13,13 @@ A dedicated writer task per connection drains both, so one slow socket can
 never stall the leaderboard broadcast for everyone else.
 
 AI-ASSISTED (Claude Code): pattern proposed by the AI when asked how to stop a
-slow client from stalling broadcasts. Verified by tests/test_connection.py.
+slow client from stalling broadcasts. Verified by tests/test_hub.py.
 """
 
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import logging
 import time
@@ -112,10 +113,8 @@ class Connection:
         self._closer = asyncio.create_task(self._force_close())
 
     async def _force_close(self) -> None:
-        try:
+        with contextlib.suppress(Exception):
             await asyncio.wait_for(self.ws.close(code=CLOSE_TRY_AGAIN_LATER, reason="send queue full"), 2.0)
-        except Exception:
-            pass
 
     # -- consumer ----------------------------------------------------------
     def start_writer(self) -> asyncio.Task:

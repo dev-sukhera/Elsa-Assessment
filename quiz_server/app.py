@@ -16,9 +16,9 @@ import asyncio
 import contextlib
 import logging
 import time
+from collections.abc import Callable
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Callable
 
 from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse, Response
