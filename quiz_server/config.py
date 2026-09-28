@@ -10,6 +10,9 @@ import os
 from dataclasses import dataclass
 
 
+STORE_BACKENDS = ("memory", "redis")
+
+
 def _env_float(name: str, default: float) -> float:
     return float(os.environ.get(name, default))
 
@@ -39,8 +42,14 @@ class Settings:
 
     log_level: str = "INFO"
 
+    def __post_init__(self) -> None:
+        # A typo such as QUIZ_STORE=reddis used to fall back to the in-memory
+        # store silently, so a "multi-node" deployment ran with split state.
+        if self.store_backend not in STORE_BACKENDS:
+            raise ValueError(f"QUIZ_STORE must be one of {', '.join(STORE_BACKENDS)}, got {self.store_backend!r}")
+
     @classmethod
-    def from_env(cls) -> "Settings":
+    def from_env(cls) -> Settings:
         return cls(
             store_backend=os.environ.get("QUIZ_STORE", cls.store_backend),
             redis_url=os.environ.get("QUIZ_REDIS_URL", cls.redis_url),
