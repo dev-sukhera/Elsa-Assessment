@@ -97,6 +97,8 @@ Reproduce with `.venv/bin/python scripts/mutation_check.py`. The script always r
 
 ## Known limits of the verification
 
+*Update 2026-11-07: the first two limits below have been closed. The contract suite has run against a real Redis server, and the Compose stack has run. See TEST_RESULTS.md §7.*
+
 - **No real Redis server.** Redis behaviour was tested with fakeredis, which runs the real Lua scripts through `lupa`. Differences from real Redis are possible, especially in pub/sub reconnection. The next step is running the contract suite against real Redis in CI with testcontainers.
 - **Docker Compose and nginx not run.** No Docker was available.
 - **Failure paths without automated tests:** graceful restart, a Redis outage, pub/sub resync, and publish failure. See TEST_RESULTS.md §6.

@@ -115,12 +115,43 @@ These behaviours exist in the code and are described in the design, but no test 
 
 | Behaviour | Code |
 |---|---|
-| Close code 1012 on graceful shutdown | `Hub.stop()` |
 | `/readyz` returns 503 when the store is unreachable | `app.py` `readyz` |
 | `internal_error` reply when the store fails during an answer | `app.py` WebSocket handler |
 | Periodic 5-second resync after a lost pub/sub message | `Hub._flush_loop` |
 | Local fallback when a bus publish fails | `Hub.notify_changed` |
 | Redis pub/sub reader reconnect with back-off | `RedisBus._reader` |
 | Client reconnect with back-off and jitter | `client/index.html` |
-| Docker image, Compose file and nginx config | `Dockerfile`, `docker-compose.yml`, `deploy/nginx.conf`, never run |
-| Redis store against a real Redis server | Only run against fakeredis |
+
+Since 2026-11-07, graceful shutdown (1012) has a test, the Compose stack has been run, and the store contract has run against a real Redis server. See section 7.
+
+## 7. Re-verification on 2026-11-07
+
+All runs were in Docker on an Apple-silicon Mac: `python:3.12-slim` for the tests, the Compose stack from `docker-compose.yml`, and Playwright 1.49.1 (Chromium) for the browser.
+
+**Tests.** `pytest -q --timeout 60`: 58 passed and 1 skipped (a Redis-only TTL test, skipped for the memory store). With `QUIZ_TEST_REDIS_URL` pointing at a `redis:7-alpine` container, 69 passed and 1 skipped: the 11 store contract tests also ran against real Redis. `ruff check .` reported no findings, and `scripts/mutation_check.py` caught all 8 mutants.
+
+**Bugs found by these runs and fixed:**
+
+- Real Redis exposed `MaxConnectionsError`. redis-py's default async pool fails once 100 connections are in use, and the 300-answer concurrency test reached that limit. Nodes now use a blocking pool sized by `QUIZ_REDIS_MAX_CONNECTIONS`.
+- With two nodes behind nginx, a quiz created with `POST /api/quizzes` existed only on the node that created it, so about half of the joins failed with 4404. The session title is now stored in Redis (`quiz:{id}:meta`) and any node can resolve it.
+- `Hub.stop()` changed the connection sets while it was still iterating over them, so shutdown with players connected raised `RuntimeError`.
+- The browser client cleared the "correct, +N points" feedback as soon as it arrived, because the next question follows straight after `answer_result`.
+
+**Compose stack** (two nodes, nginx and Redis), load test through nginx:
+
+```
+python scripts/load_test.py --url ws://lb --quizzes 10 --players 50 --think-ms 300 --ramp-s 2
+
+players            500 (10 quizzes x 50)
+completed          500   connection failures: 0
+answers            2500 in 3.0s (825/s)
+answer RTT ms      p50 1.0  p95 5.3  p99 8.1  max 20.0
+leaderboard ms     p50 57.2  p95 113.5  p99 123.9
+leaderboard msgs   3925 received (naive per-answer fan-out would be 125000)
+protocol errors    0
+score mismatches   0   REST totals agree: True
+```
+
+nginx spread the connections over both nodes: 256 joins on `quiz-a` and 244 on `quiz-b`. In a separate check, a player connected directly to `quiz-a` saw a score from a player on `quiz-b` within one leaderboard tick.
+
+**Browser.** A Playwright script played the demo quiz in Chromium with four players at 1440×900 and 390×844, with no console errors. The screenshots in `docs/screenshots/` come from that run.

@@ -303,7 +303,7 @@ Untested rows are also listed in [TEST_RESULTS.md](TEST_RESULTS.md) §6.
 - The event stream and results worker for durable history.
 - Adaptive rank refresh for very large quizzes (section 7).
 - Host-controlled "live" mode, where all players see the same question at the same moment, Kahoot-style. The store already supports it: the host would broadcast `question` and set a shared served time.
-- Run the contract suite against real Redis in CI with testcontainers.
+- Automate the real-Redis contract run (today it runs when `QUIZ_TEST_REDIS_URL` is set).
 
 ## 14. AI collaboration in design
 
