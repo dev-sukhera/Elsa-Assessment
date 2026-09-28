@@ -25,6 +25,7 @@ class Settings:
     # "memory" for a single node, "redis" for a horizontally scaled cluster.
     store_backend: str = "memory"
     redis_url: str = "redis://localhost:6379/0"
+    redis_max_connections: int = 100
 
     # Leaderboard fan-out is coalesced: at most one snapshot per quiz per interval.
     leaderboard_interval_s: float = 0.1
@@ -52,6 +53,7 @@ class Settings:
         return cls(
             store_backend=os.environ.get("QUIZ_STORE", cls.store_backend),
             redis_url=os.environ.get("QUIZ_REDIS_URL", cls.redis_url),
+            redis_max_connections=_env_int("QUIZ_REDIS_MAX_CONNECTIONS", cls.redis_max_connections),
             leaderboard_interval_s=_env_float("QUIZ_LEADERBOARD_INTERVAL_S", cls.leaderboard_interval_s),
             leaderboard_top_n=_env_int("QUIZ_LEADERBOARD_TOP_N", cls.leaderboard_top_n),
             send_queue_size=_env_int("QUIZ_SEND_QUEUE_SIZE", cls.send_queue_size),

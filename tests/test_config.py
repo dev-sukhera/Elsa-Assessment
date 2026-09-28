@@ -7,10 +7,12 @@ def test_from_env_reads_overrides(monkeypatch):
     monkeypatch.setenv("QUIZ_STORE", "redis")
     monkeypatch.setenv("QUIZ_LEADERBOARD_TOP_N", "25")
     monkeypatch.setenv("QUIZ_RATE_LIMIT_PER_S", "2.5")
+    monkeypatch.setenv("QUIZ_REDIS_MAX_CONNECTIONS", "32")
     settings = Settings.from_env()
     assert settings.store_backend == "redis"
     assert settings.leaderboard_top_n == 25
     assert settings.rate_limit_per_s == 2.5
+    assert settings.redis_max_connections == 32
 
 
 def test_defaults_without_env(monkeypatch):

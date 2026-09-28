@@ -50,12 +50,9 @@ class CreateQuizBody(BaseModel):
 
 def _build_backends(settings: Settings) -> tuple[SessionStore, UpdateBus]:
     if settings.store_backend == "redis":
-        from redis.asyncio import Redis
+        from .store.redis_store import RedisStore, connect
 
-        from .store.redis_store import RedisStore
-
-        redis = Redis.from_url(settings.redis_url, health_check_interval=10,
-                               socket_keepalive=True, retry_on_timeout=True)
+        redis = connect(settings.redis_url, settings.redis_max_connections)
         return RedisStore(redis, ttl_s=settings.session_ttl_s), RedisBus(redis)
     return InMemoryStore(), LocalBus()
 

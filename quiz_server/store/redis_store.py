@@ -20,7 +20,7 @@ Not yet run against a real Redis server in this environment.
 
 from __future__ import annotations
 
-from redis.asyncio import Redis
+from redis.asyncio import BlockingConnectionPool, Redis
 
 from .base import AnswerOutcome, LeaderboardEntry, ParticipantState, SessionStore
 
@@ -45,6 +45,18 @@ local v = redis.call('INCR', KEYS[3])
 for i = 1, 3 do redis.call('EXPIRE', KEYS[i], ARGV[4]) end
 return {1, s, v}
 """
+
+
+def connect(url: str, max_connections: int = 100) -> Redis:
+    """Redis client whose pool makes callers wait for a free connection.
+
+    redis-py's default pool raises MaxConnectionsError once 100 connections
+    are checked out, which a busy node reaches easily: every in-flight answer
+    holds one. Waiting a few milliseconds is far better than failing the answer.
+    """
+    pool = BlockingConnectionPool.from_url(url, max_connections=max_connections, timeout=5,
+                                           health_check_interval=10, socket_keepalive=True, retry_on_timeout=True)
+    return Redis.from_pool(pool)
 
 
 def _to_score(raw: bytes | str | float | None) -> int:
